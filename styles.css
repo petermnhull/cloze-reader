@@ -223,6 +223,14 @@ mark {
 .beta-note { margin: 10px 0 0; font-size: 0.85rem; color: var(--muted); }
 .beta-note .badge { margin: 0 4px 0 0; }
 
+.why {
+  margin-top: 48px; padding: 18px 20px; background: var(--surface); border: 1px solid var(--line);
+  border-left: 5px solid var(--f); border-radius: 12px; max-width: 46em;
+}
+.why h2 { margin: 0 0 6px; font-size: 1rem; }
+.why p { margin: 0; color: var(--muted); }
+.why em { color: var(--text); }
+
 footer { margin-top: 56px; font-size: 0.85rem; }
 
 /* ---- Which words to learn ---- */
