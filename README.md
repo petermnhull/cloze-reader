@@ -6,6 +6,13 @@ the real sentence from your book. Export to **Anki** or **Clozemaster**.
 Everything runs in the browser: `vocab.db` is read locally with [sql.js](https://sql.js.org) and
 never uploaded. The site is plain static files, hosted on GitHub Pages.
 
+## Why I made this
+
+I made this because I couldn't find a tool built for full immersion. Most vocabulary tools lean on
+English translations, and few let you skip straight to *activating* the complex vocabulary you
+actually meet in books. Cloze Reader keeps everything in French, with your own sentences and French
+definitions as the clue, so words you once looked up become words you can recall and use.
+
 ## Privacy
 
 - Your `vocab.db` is opened in the page with sql.js and never sent anywhere. There's no server,
