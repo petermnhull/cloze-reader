@@ -232,6 +232,8 @@ mark {
 .why em { color: var(--text); }
 
 footer { margin-top: 56px; font-size: 0.85rem; }
+.feedback { margin: 0 0 12px; font-size: 0.95rem; color: var(--text); }
+.feedback a { font-weight: 650; }
 
 /* ---- Which words to learn ---- */
 .freq {

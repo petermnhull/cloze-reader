@@ -112,6 +112,12 @@ Note. The Translation column holds the first French definition, which Clozemaste
 - [ ] Sentence audio (TTS)
 - [ ] Other sources: Kobo, Kindle highlights, pasted text
 
+## Feedback
+
+Something not working, or an idea? [Open an issue](https://github.com/petermnhull/cloze-reader/issues/new/choose).
+Please don't attach your `vocab.db` or paste long passages from books: the word and a short
+description are enough.
+
 ## Credits and licences
 
 - Code: [GNU AGPL-3.0](LICENSE). If you run a modified copy as a website, share its source too.
