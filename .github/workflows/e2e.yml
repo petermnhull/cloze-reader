@@ -1,0 +1,103 @@
+# Builds the site exactly as it would be deployed (static files + dict/fr built from kaikki.org),
+# serves it privately on the runner and tests it end to end in headless Chrome. Nothing is
+# published: the built site is uploaded as a workflow artifact you can download and serve locally.
+name: e2e
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, "ci/**"]
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  KAIKKI_URL: https://kaikki.org/frwiktionary/Fran%C3%A7ais/kaikki.org-dictionary-Fran%C3%A7ais.jsonl.gz
+  KAIKKI_FILE: kaikki/fr.jsonl.gz
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22 # 22.13+ for the built-in node:sqlite used by the fixture
+
+      # The extract is ~390 MB; re-download it at most once a month.
+      - name: Cache month
+        id: month
+        run: echo "month=$(date -u +%Y-%m)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache kaikki.org extract
+        id: kaikki
+        uses: actions/cache@v4
+        with:
+          path: kaikki
+          key: kaikki-fr-${{ steps.month.outputs.month }}
+
+      - name: Download kaikki.org extract
+        if: steps.kaikki.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p kaikki
+          curl --fail --location --retry 3 --silent --show-error -o "$KAIKKI_FILE" "$KAIKKI_URL"
+          ls -l kaikki
+
+      # Zipf word frequencies for the "skip rare words" filter and the freq:: tags.
+      - name: Export word frequencies
+        run: |
+          pip install --quiet wordfreq==3.1.1
+          python3 scripts/export-wordfreq.py fr > freq-fr.tsv
+          wc -l freq-fr.tsv
+
+      - name: Build dict/fr
+        run: npm run build-dict -- "$KAIKKI_FILE" --freq freq-fr.tsv
+
+      - name: Unit tests
+        run: node --test
+
+      # The files GitHub Pages would serve: no build step, just the static files plus dict/.
+      - name: Assemble site
+        run: |
+          mkdir _site
+          cp -R index.html styles.css src dict _site/
+          du -sh _site
+          find _site -type f | wc -l
+
+      - name: End-to-end test (headless Chrome)
+        env:
+          SITE_DIR: _site
+          CHROME_PATH: google-chrome
+        run: |
+          google-chrome --version
+          node scripts/e2e.mjs
+
+      - name: Upload built site
+        if: success()
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+          retention-days: 7
+
+  # Publishes the tested site to GitHub Pages. Off until the repository variable PAGES_DEPLOY is
+  # "true" (Settings → Secrets and variables → Actions → Variables) and Pages is set to deploy from
+  # GitHub Actions, so nothing is published by accident. See "Deploying" in the README.
+  deploy:
+    needs: e2e
+    if: github.ref == 'refs/heads/main' && vars.PAGES_DEPLOY == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

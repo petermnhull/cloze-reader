@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cloze Reader</title>
+    <meta name="description" content="Turn the words you looked up on your Kindle into French cloze cards for Anki or Clozemaster." />
+    <!-- The page may only load its own files and sql.js, and may only send requests to itself and
+         the CDN: your vocab.db can't leave the browser even by accident. -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com 'wasm-unsafe-eval'; connect-src 'self' https://cdnjs.cloudflare.com; img-src 'self' data:; style-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <meta name="theme-color" content="#0068a8" />
+    <meta property="og:title" content="Cloze Reader" />
+    <meta property="og:description" content="Learn the words from your books, in French: Kindle lookups become fill-in-the-blank cards for Anki or Clozemaster." />
+    <meta property="og:type" content="website" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='2' y='8' width='28' height='16' rx='4' fill='%23b34700' fill-opacity='.2'/%3E%3Crect x='2' y='22' width='28' height='3' rx='1.5' fill='%23b34700'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%230068a8'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js"
+      integrity="sha384-8D3Rsfo535FqoC1pHCCQMrNf75UgzyoG/HQm9zOzITRrz3QKzecc2E7JXKGCXoWu"
+      crossorigin="anonymous"
+    ></script>
+    <script type="module" src="src/app.js"></script>
+  </head>
+  <body>
+    <div class="stripe" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+    <main>
+      <header class="hero">
+        <div class="hero-text">
+          <p class="wordmark">Cloze <span class="blank">Reader</span></p>
+          <h1>Learn the words from your books, in French.</h1>
+          <p class="lede">
+            Every word you looked up on your Kindle becomes a fill-in-the-blank card: the sentence from
+            your book, a French definition as the clue, and the answer revealed in place.
+          </p>
+          <ol class="steps">
+            <li class="step-m"><span>1</span>Drop your <code>vocab.db</code></li>
+            <li class="step-f"><span>2</span>Pick your books</li>
+            <li class="step-v"><span>3</span>Download for Anki or Clozemaster</li>
+          </ol>
+          <p class="private">Your file is read in this browser and never uploaded.</p>
+        </div>
+
+        <figure class="demo g-f" id="demo" aria-label="Example card">
+          <span class="chip">Nom commun, féminin</span>
+          <p class="demo-sentence">
+            Avant l’aube, elle ouvrit la <span class="blank-word"><span>buvette</span></span> du port et
+            alluma le vieux poêle.
+          </p>
+          <div class="demo-panel">
+            <ol>
+              <li>Établissement où l’on boit.</li>
+              <li>Buffet de rafraîchissements, attenant à un lieu d’assemblée publique.</li>
+            </ol>
+          </div>
+          <button type="button" class="reveal" id="demo-reveal" aria-pressed="false">Révéler</button>
+        </figure>
+      </header>
+
+      <section id="load">
+        <label class="drop" id="drop">
+          <input type="file" id="file" accept=".db" hidden />
+          <svg class="drop-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5zM4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5" />
+            <path d="M12 7v7m-3-3 3 3 3-3" />
+          </svg>
+          <strong>Drop your <code>vocab.db</code> here</strong>
+          <span class="muted">or click to choose the file</span>
+        </label>
+        <details>
+          <summary>Where do I find vocab.db?</summary>
+          <ol>
+            <li>Connect your Kindle to your computer with a USB cable.</li>
+            <li>Open the Kindle drive and go to <code>system/vocabulary/</code>. On a Mac, press <kbd>⌘</kbd><kbd>⇧</kbd><kbd>.</kbd> if the <code>system</code> folder is hidden.</li>
+            <li>Copy <code>vocab.db</code> to your computer, then drop it above.</li>
+          </ol>
+        </details>
+        <p id="error" class="error" role="alert" hidden></p>
+      </section>
+
+      <section id="setup" hidden>
+        <div class="panel-box">
+          <div class="controls">
+            <label>Language <select id="lang"></select></label>
+            <label>Anki deck name <input id="deck" value="Kindle cloze" /></label>
+            <label class="check"><input type="checkbox" id="subdecks" checked /> One Anki subdeck per book</label>
+          </div>
+
+          <fieldset>
+            <legend>Books</legend>
+            <div class="inline">
+              <button type="button" id="books-all" class="link">Select all</button>
+              <button type="button" id="books-none" class="link">Select none</button>
+            </div>
+            <ul id="books" class="books"></ul>
+          </fieldset>
+        </div>
+
+        <section class="freq" id="freq-box" aria-labelledby="freq-title">
+          <h2 id="freq-title">Which words do you want to learn?</h2>
+          <p class="freq-intro">
+            Some words you looked up are so rare you may never meet them again. Leaving them out keeps
+            your deck focused on words you’ll actually use.
+          </p>
+          <div class="levels" id="levels" role="radiogroup" aria-labelledby="freq-title"></div>
+          <p id="freq-help" class="freq-help"></p>
+        </section>
+
+        <div class="summary">
+          <p id="stats"></p>
+          <div class="actions">
+            <button type="button" id="export-anki">Download for Anki (.apkg)</button>
+            <button type="button" id="export-clozemaster" class="secondary">
+              Download for Clozemaster <span class="badge">Beta</span>
+            </button>
+          </div>
+          <p class="beta-note">
+            <span class="badge">Beta</span> The Clozemaster file needs Clozemaster Pro. It has one row per
+            sentence, with a French definition as the hint.
+          </p>
+        </div>
+
+        <div class="preview-head">
+          <label>Order
+            <select id="sort">
+              <option value="recent">Most recent first</option>
+              <option value="rare">Rarest first</option>
+              <option value="common">Most common first</option>
+            </select>
+          </label>
+        </div>
+
+        <ul class="legend" aria-label="Colour key">
+          <li class="g-m">masculin</li>
+          <li class="g-f">féminin</li>
+          <li class="k-verb">verbe</li>
+          <li class="k-adj">adjectif</li>
+          <li>autre</li>
+        </ul>
+
+        <ul id="cards" class="cards"></ul>
+        <p id="more" class="muted"></p>
+
+        <details id="failed-box" hidden>
+          <summary id="failed-summary"></summary>
+          <ul id="failed" class="muted"></ul>
+        </details>
+      </section>
+
+      <footer class="muted">
+        French definitions from <a href="https://fr.wiktionary.org">Wiktionnaire</a> via
+        <a href="https://kaikki.org/frwiktionary/">kaikki.org</a>, and word frequencies from
+        <a href="https://github.com/rspeer/wordfreq">wordfreq</a> by Robyn Speer, both licensed
+        <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>.<br />
+        Not affiliated with Amazon, Anki or Clozemaster. Kindle is a trademark of Amazon.<br />
+        <a href="https://github.com/petermnhull/cloze-reader">Source code</a> (AGPL-3.0).
+      </footer>
+    </main>
+    <noscript><p class="noscript">Cloze Reader runs entirely in your browser and needs JavaScript.</p></noscript>
+  </body>
+</html>

@@ -1,0 +1,10 @@
+.DS_Store
+node_modules/
+*.db
+*.sqlite
+cloze-reader-*.txt
+cloze-reader-*.tsv
+dict/
+freq-*.tsv
+kaikki/
+_site/

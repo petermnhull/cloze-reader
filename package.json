@@ -1,0 +1,15 @@
+{
+  "name": "cloze-reader",
+  "private": true,
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "serve": "python3 scripts/serve.py 8000",
+    "check-db": "node scripts/check-db.mjs",
+    "build-dict": "node --max-old-space-size=8192 scripts/build-dictionary.mjs",
+    "e2e": "node scripts/e2e.mjs",
+    "make-fixture": "node scripts/make-fixture-db.mjs",
+    "export-freq": "python3 scripts/export-wordfreq.py fr > freq-fr.tsv"
+  }
+}
