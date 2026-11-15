@@ -13,7 +13,7 @@ test("cleanTitle drops imprints, collections and prize subtitles", () => {
   assert.equal(cleanTitle("Le Silence des pierres (LITT.GENERALE) (French Edition)"), "Le Silence des pierres");
   assert.equal(cleanTitle("Mimosa : Prix des Lecteurs 2024 (Littérature Française) (French Edition)"), "Mimosa");
   assert.equal(cleanTitle("Le vent sur la jetée - Prix du premier roman 2025. (French Edition)"), "Le vent sur la jetée");
-  assert.equal(cleanTitle("Moi, Léon, 11 ans, détective (Milan Poche Junior t. 4) (French Edition)"), "Moi, Léon, 11 ans, détective");
+  assert.equal(cleanTitle("Moi, Léon, 11 ans, détective (Éditions Lune Junior t. 4) (French Edition)"), "Moi, Léon, 11 ans, détective");
   assert.equal(cleanTitle("L'art du voyage (Poches littérature) (French Edition)"), "L'art du voyage");
 });
 

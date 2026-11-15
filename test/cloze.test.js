@@ -16,7 +16,7 @@ test("does not match inside a longer word", () => {
 });
 
 test("handles elision and curly apostrophes", () => {
-  assert.equal(makeCloze({ usage: "Il y avait presque de l’épouvante dans son regard.", word: "épouvante" }).before, "Il y avait presque de l’");
+  assert.equal(makeCloze({ usage: "On lisait un peu de l’épouvante sur son visage.", word: "épouvante" }).before, "On lisait un peu de l’");
   assert.equal(makeCloze({ usage: "Aujourd’hui, il pleut beaucoup sur toute la ville.", word: "aujourd'hui" }).answer, "Aujourd’hui");
 });
 
@@ -35,10 +35,10 @@ test("keeps only the sentence containing the word", () => {
 
 test("adds a neighbouring sentence when the sentence is very short", () => {
   const cloze = makeCloze({
-    usage: "Il attendait devant la porte depuis longtemps. Quelle aubaine ! Tout le monde riait.",
+    usage: "Le bus est enfin arrivé après une heure d’attente. Quelle aubaine ! Tout le monde riait.",
     word: "aubaine",
   });
-  assert.equal(cloze.before, "Il attendait devant la porte depuis longtemps. Quelle ");
+  assert.equal(cloze.before, "Le bus est enfin arrivé après une heure d’attente. Quelle ");
   assert.equal(cloze.after, " !");
 });
 
@@ -87,10 +87,10 @@ test("buildCards groups lookups by stem, newest sentence first, without duplicat
 });
 
 test("buildCards keeps at most MAX_SENTENCES sentences", () => {
-  const usages = ["Une buvette ici, au bord de la route.", "Une buvette là-bas, près du vieux port.", "Une buvette partout, même dans la gare.", "Une buvette encore, au fond de la cour."];
+  const usages = ["Une buvette ici, près du vieux chemin.", "Une buvette là-bas, près du vieux port.", "Une buvette partout, même dans la gare.", "Une buvette encore, derrière la grange."];
   const { cards } = buildCards(usages.map((usage, i) => lookup({ usage, timestamp: i })));
   assert.equal(cards[0].sentences.length, MAX_SENTENCES);
-  assert.match(cards[0].sentences[0].after, /cour/);
+  assert.match(cards[0].sentences[0].after, /grange/);
 });
 
 test("buildCards filters by language and book, and reports skips", () => {

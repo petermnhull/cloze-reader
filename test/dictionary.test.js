@@ -73,7 +73,7 @@ test("define collects synonyms across homographs without duplicates", async () =
 test("define merges homographs, caps senses, and returns null when nothing is found", async () => {
   const { dictionary } = fakeDictionary({
     cap: [
-      { p: "Nom commun", g: "m", s: ["Pointe de terre.", "Direction.", "Étape."] },
+      { p: "Nom commun", g: "m", s: ["Avancée dans la mer.", "Direction.", "Étape."] },
       { p: "Nom commun", g: "m", s: ["Abréviation de capitaine.", "Autre.", "Encore."] },
     ],
   });
@@ -135,4 +135,73 @@ test("compactEntry turns inflected forms into links and skips proper nouns", () 
     { p: "Nom commun", f: ["cure-dent"] },
   );
   assert.equal(compactEntry({ word: "Paris", lang_code: "fr", pos: "name", pos_title: "Nom propre", senses: [] }), null);
+});
+
+// Patterns from a backtest over real Kindle lookups, rewritten as invented sentences.
+import { hyphenCompound, matchesLocution, tokens, verbSignal } from "../src/dictionary.js";
+import { locutionWords } from "../scripts/build-dictionary.mjs";
+
+const matches = (locution, sentence, answer) => {
+  const words = tokens(sentence);
+  return matchesLocution(locution, words, words.indexOf(answer));
+};
+
+test("matchesLocution finds locutions the sentence really uses", () => {
+  assert.ok(matches("au bout du rouleau", "Après la randonnée, nous étions au bout du rouleau.", "rouleau"));
+  assert.ok(matches("ne pas quitter d’une semelle", "Mon frère ne me quitte jamais d’une semelle.", "semelle"));
+  assert.ok(matches("sonner le glas", "Ce scandale sonnera bientôt le glas du projet.", "glas"));
+  assert.ok(matches("au sein de", "Le débat continue au sein des syndicats.", "sein"));
+  assert.ok(matches("éclater en sanglots", "Le témoin éclata soudainement en sanglots.", "sanglots"));
+  assert.ok(matches("abattre ses cartes", "Elle hésite à abattre enfin ses cartes.", "abattre"));
+  assert.ok(matches("en un tournemain", "Le cuisinier prépara la sauce en un tournemain.", "tournemain"));
+});
+
+test("matchesLocution rejects false matches", () => {
+  assert.ok(!matches("ocre rouge", "Elle choisit de l’ocre, puis du rouge.", "ocre"));
+  assert.ok(!matches("ne pas laisser de", "Il faut laisser le temps de réfléchir.", "laisser"));
+  assert.ok(!matches("regarder de côté", "Le guetteur regarde de chaque côté.", "regardait"));
+  assert.ok(!matches("trouver son jour", "Nous trouvons chaque jour du nouveau.", "trouve"));
+  assert.ok(!matches("pas de parade", "Le boxeur prépare des parades.", "parades"));
+  assert.ok(!matches("avoir sujet de", "Le sujet de la conférence était flou.", "sujet"));
+  assert.ok(!matches("100 premiers jours", "Ses premiers jours de stage furent doux.", "premiers"));
+  assert.ok(!matches("poupée de son", "Une poupée de laine traînait par terre.", "poupée"));
+  assert.ok(!matches("faire la bête", "Il veut faire la grosse bête.", "bête"));
+});
+
+test("hyphenCompound returns the whole hyphenated word", () => {
+  assert.equal(hyphenCompound({ before: "au bord d’un à-", answer: "pic", after: "." }), "à-pic");
+  assert.equal(hyphenCompound({ before: "un ", answer: "trop", after: "-plein d’eau" }), "trop-plein");
+  assert.equal(hyphenCompound({ before: "le ", answer: "pic", after: " vert" }), null);
+});
+
+test("verbSignal spots verbs from pronouns, auxiliaries and gerunds", () => {
+  assert.ok(verbSignal({ before: "– Te ", answer: "bile" }));
+  assert.ok(verbSignal({ before: "Comme elle s’", answer: "escrime" }));
+  assert.ok(verbSignal({ before: "Le mur était ", answer: "criblé" }));
+  assert.ok(verbSignal({ before: "nous l'avions ", answer: "écumé" }));
+  assert.ok(verbSignal({ before: "elle en avait vraiment ", answer: "bavé" }));
+  assert.ok(verbSignal({ before: "il arriva en ", answer: "haletant" }));
+  assert.ok(!verbSignal({ before: "Le voisin sortit en ", answer: "pantoufles" }));
+  assert.ok(!verbSignal({ before: "le cheval secouait sa ", answer: "croupe" }));
+});
+
+test("locutionWords indexes a locution under its meaningful words", () => {
+  assert.deepEqual(locutionWords("être au bout du rouleau"), ["bout", "rouleau"]);
+  assert.deepEqual(locutionWords("ne pas quitter d’une semelle"), ["quitter", "semelle"]);
+});
+
+test("define prefers a locution the sentence uses, then the hyphenated word, then a verb", async () => {
+  const { dictionary } = fakeDictionary({
+    rouleau: [{ p: "Nom commun", s: ["Objet cylindrique."] }, { x: ["au bout du rouleau"] }],
+    "au bout du rouleau": [{ p: "Locution adjectivale", s: ["Épuisé."] }],
+    pic: [{ p: "Nom commun", s: ["Oiseau."] }],
+    "à-pic": [{ p: "Nom commun", s: ["Paroi verticale."] }],
+    bile: [{ p: "Nom commun", s: ["Humeur du foie."] }, { p: "Forme de verbe", f: ["biler"] }],
+    biler: [{ p: "Verbe", s: ["S’inquiéter."] }],
+  });
+  const card = (before, answer, after) => ({ stem: answer, sentences: [{ before, answer, after }] });
+  assert.equal((await define(dictionary, card("Nous étions au bout du ", "rouleau", "."))).lemma, "au bout du rouleau");
+  assert.equal((await define(dictionary, card("au bord d’un à-", "pic", "."))).lemma, "à-pic");
+  assert.equal((await define(dictionary, card("– Te ", "bile", " pas !"))).lemma, "biler");
+  assert.equal((await define(dictionary, card("Le foie produit la ", "bile", "."))).lemma, "bile");
 });

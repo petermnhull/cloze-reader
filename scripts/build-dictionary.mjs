@@ -9,7 +9,7 @@ import { createReadStream, mkdirSync, readFileSync, rmSync, writeFileSync } from
 import { createInterface } from "node:readline";
 import { createGunzip } from "node:zlib";
 import { pathToFileURL } from "node:url";
-import { bucketFile, bucketOf } from "../src/dictionary.js";
+import { bucketFile, bucketOf, tokens } from "../src/dictionary.js";
 
 const MAX_SENSES_PER_ENTRY = 6;
 const MAX_GLOSS_CHARS = 300;
@@ -95,10 +95,25 @@ function readFrequencies(path) {
   return frequencies;
 }
 
+// Words too common to index locutions under ("de", "faire"…); the page only looks up locutions
+// for the word on a card, which is never one of these.
+const LOCUTION_INDEX_SKIP = new Set([
+  "les", "des", "une", "aux", "dans", "par", "pour", "sur", "avec", "sans", "pas", "qui", "que", "quoi", "son", "ses",
+  "être", "avoir", "faire", "aller", "tout", "tous", "toute", "toutes", "plus", "moins", "bien", "comme", "quelqu",
+  "chose", "quelque", "leur", "leurs", "elle", "nous", "vous", "même", "très",
+]);
+const MAX_LOCUTIONS_PER_WORD = 300;
+
+// The words a locution is indexed under: "être au bout du rouleau" -> ["bout", "rouleau"].
+export function locutionWords(locution) {
+  return [...new Set(tokens(locution).filter((t) => t.length >= 3 && !LOCUTION_INDEX_SKIP.has(t)))];
+}
+
 async function build(input, outDir, buckets, frequencies) {
   const data = Array.from({ length: buckets }, () => ({}));
   let lines = 0;
   let kept = 0;
+  const locutions = new Set();
   const lineReader = createInterface({ input: createReadStream(input).pipe(createGunzip()), crlfDelay: Infinity });
   for await (const line of lineReader) {
     if (++lines % 200000 === 0) console.log(`${lines} lines, ${kept} entries`);
@@ -112,8 +127,20 @@ async function build(input, outDir, buckets, frequencies) {
     }
     const bucket = data[bucketOf(result.key, buckets)];
     (bucket[result.key] ??= []).push(result.entry);
+    if (result.entry.s && /\s/.test(result.key)) locutions.add(result.key);
     kept++;
   }
+
+  // Index locutions under their words ({ x: [...] }), so a card can find the ones its sentence uses.
+  const byWord = new Map();
+  for (const locution of locutions) {
+    for (const word of locutionWords(locution)) (byWord.get(word) ?? byWord.set(word, []).get(word)).push(locution);
+  }
+  for (const [word, list] of byWord) {
+    const bucket = data[bucketOf(word, buckets)];
+    (bucket[word] ??= []).push({ x: list.sort((a, b) => a.length - b.length).slice(0, MAX_LOCUTIONS_PER_WORD) });
+  }
+  console.log(`${locutions.size} locutions indexed under ${byWord.size} words`);
 
   rmSync(outDir, { recursive: true, force: true });
   mkdirSync(outDir, { recursive: true });

@@ -98,8 +98,12 @@ Note. The Translation column holds the first French definition, which Clozemaste
   so a whole-word match works almost every time; the stem is the fallback. Lookups are grouped by stem (up to 3 sentences per card). The text is trimmed to
   the sentence containing the word (including splitting em-dash dialogue), with a neighbouring
   sentence added when it's very short.
-- `src/dictionary.js` looks up definitions: Kindle stem, then the forms you looked up, then
-  `oe`→`œ` spellings and « à … » locutions, following form-of/variant links to the lemma.
+- `src/dictionary.js` looks up definitions, reading the sentence for context: first a hyphenated
+  word the sentence uses (*à-pic*), then an expression it uses (*au bout du rouleau*, *ne pas
+  quitter d’une semelle*: the build indexes ~82,000 Wiktionary locutions by their words), then the
+  Kindle stem and the forms you looked up, following form-of/variant links to the lemma. A noun is
+  swapped for the verb when the sentence clearly uses a verb (*le mur était criblé* → *cribler*,
+  *ne te bile pas* → *se biler*).
 - `src/anki.js` builds the `.apkg` (note type, templates, CSS, SQLite collection via sql.js) and
   `src/zip.js` packs it. `src/export.js` has the Clozemaster file and the masking of the answer in
   definitions.

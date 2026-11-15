@@ -11,7 +11,7 @@ import { pathToFileURL } from "node:url";
 export const FIXTURE_LOOKUPS = [
   ["buvette", "buvette", "b1", "Après la course, nous avons pris un citron pressé à la buvette du stade."],
   ["défiait", "défier", "b1", "Le petit chat défiait le chien du voisin depuis le haut du mur."],
-  ["auvent", "auvent", "b1", "Il attendait la fin de l'averse sous l'auvent de la boulangerie."],
+  ["auvent", "auvent", "b1", "Il s'abrita de l'averse sous l'auvent de la boulangerie."],
   ["ruelle", "ruelle", "b1", "La ruelle derrière la mairie sentait le pain chaud et la lessive."],
   ["chuchotait", "chuchoter", "b2", "Pendant le film, elle chuchotait des commentaires à son frère."],
   ["lueur", "lueur", "b2", "Une faible lueur passait sous la porte du grenier."],

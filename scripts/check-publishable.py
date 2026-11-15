@@ -20,7 +20,7 @@ FORBIDDEN_FILES = re.compile(r"(\.db|\.sqlite|\.apkg|\.colpkg|\.jsonl(\.gz)?)$|(
 SECRETS = re.compile(r"sk-ant-[A-Za-z0-9_-]{10,}|sk-[A-Za-z0-9]{32,}|gh[pousr]_[A-Za-z0-9]{30,}|AKIA[0-9A-Z]{16}|-----BEGIN [A-Z ]*PRIVATE KEY")
 BLOCKLIST = ".publish-blocklist"
 SHINGLE = 32  # characters of book text that count as a copied passage
-MIN_TITLE = 12  # shorter titles ("La Peste") are too likely to appear by coincidence
+MIN_TITLE = 12  # shorter titles ("Le Pont") are too likely to appear by coincidence
 
 
 def git(*args):
