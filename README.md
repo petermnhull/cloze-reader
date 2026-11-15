@@ -1,5 +1,7 @@
 # Cloze Reader
 
+**[Open Cloze Reader → petermnhull.github.io/cloze-reader](https://petermnhull.github.io/cloze-reader/)**
+
 Turn the words you looked up while reading on a Kindle into fill-in-the-blank (cloze) cards, using
 the real sentence from your book. Export to **Anki** or **Clozemaster**.
 
