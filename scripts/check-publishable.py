@@ -24,7 +24,8 @@ MIN_TITLE = 12  # shorter titles ("Le Pont") are too likely to appear by coincid
 
 
 def git(*args):
-    return subprocess.run(["git", *args], check=True, capture_output=True, text=True).stdout
+    # Binary files (fonts) are decoded leniently so they're still scanned, not skipped.
+    return subprocess.run(["git", *args], check=True, capture_output=True).stdout.decode("utf-8", "replace")
 
 
 def norm(text):

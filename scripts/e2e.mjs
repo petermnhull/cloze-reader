@@ -247,6 +247,8 @@ async function main() {
   // Anki: only check the name and that it isn't empty; the .apkg format has its own unit tests.
   assert.match(files["export-anki"], /[/\\]cloze-reader-anki\.[a-z]+$/);
   assert.ok(statSync(files["export-anki"]).size > 0, "Anki download is empty");
+  // The zip is stored uncompressed, so the media map naming the card's typeface is plain text.
+  assert.ok(readFileSync(files["export-anki"]).includes("_atkinson-hyperlegible-next.woff2"), "Anki deck is missing the card font");
 
   // Clozemaster TSV: Sentence, Translation (first French sense), Cloze, Pronunciation, Note (book).
   assert.match(files["export-clozemaster"], /[/\\]cloze-reader-clozemaster\.tsv$/);

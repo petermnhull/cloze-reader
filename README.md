@@ -78,10 +78,11 @@ Pages is set to deploy from GitHub Actions and the repository variable `PAGES_DE
   hidden word (invisibly), so it's exactly as wide as the answer and nothing re-wraps or moves.
   New information appears only below a divider (Anki's `<hr id="answer">` convention): the word with
   its article (*la buvette*, *l’auvent*), any further senses, and the book.
-- **Style:** sans-serif, readable on phone and desktop, light and dark mode. Each card is coloured by
-  what the word is, using the colour-blind-safe Okabe–Ito palette: masculine nouns blue, feminine
-  nouns vermillion, verbs green, adjectives purple, everything else grey. The gender is always also
-  written out, and all coloured text meets WCAG AA contrast.
+- **Style:** the site's highlighter look, set in Atkinson Hyperlegible Next, readable on phone and
+  desktop, light and dark mode. The blank and the word are highlighter swipes coloured by what the
+  word is: masculine nouns blue, feminine nouns orange, verbs mint, adjectives lilac, everything else
+  grey. The gender is always also written out, so colour is never the only cue, and text on a swipe
+  is always dark ink (10:1 contrast or better).
 
 Each note has a GUID based on the word, so importing a newer `vocab.db` updates existing notes
 instead of duplicating them. Cards are tagged `cloze-reader` and `book::<title>`, and can go in one
@@ -133,6 +134,8 @@ description are enough.
   shared under the same licence.
 - Word frequencies: [wordfreq](https://github.com/rspeer/wordfreq) by Robyn Speer, CC BY-SA 4.0.
 - [sql.js](https://sql.js.org) (MIT), loaded from cdnjs.
-- Colours: the Okabe–Ito colour-blind-safe palette.
+- Typeface: [Atkinson Hyperlegible Next](https://github.com/googlefonts/atkinson-hyperlegible-next) by the
+  Braille Institute, [SIL Open Font License](assets/fonts/OFL.txt). Bundled into the Anki deck so the cards
+  use it too.
 
 Not affiliated with Amazon, Anki or Clozemaster. Kindle is a trademark of Amazon.

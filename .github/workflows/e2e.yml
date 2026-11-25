@@ -66,7 +66,7 @@ jobs:
       - name: Assemble site
         run: |
           mkdir _site
-          cp -R index.html styles.css src dict _site/
+          cp -R index.html styles.css src assets dict _site/
           du -sh _site
           find _site -type f | wc -l
 

@@ -65,6 +65,7 @@ async function loadFile(file) {
   state.excluded.clear();
   renderLanguages();
   $("setup").hidden = false;
+  $("setup").scrollIntoView({ block: "start" });
 }
 
 function countBy(items, key) {
@@ -281,10 +282,14 @@ function renderFrequency() {
   for (const option of levelOptions) option.label.classList.toggle("selected", option.level.min === state.minZipf);
   levelSummaries(cards).forEach((level, i) => {
     const { count, detail } = levelOptions[i];
-    count.textContent = loading ? "…" : `${formatCount(level.kept)} cards · ${studyTime(level.kept)} at 20 new a day`;
+    count.textContent = loading
+      ? "…"
+      : level.kept
+        ? `${formatCount(level.kept)} cards · ${studyTime(level.kept)} at 20 new a day`
+        : "0 cards";
     if (i === 0) detail.textContent = "Everything you looked up.";
     else if (loading) detail.textContent = "";
-    else if (!level.newlySkipped.length) detail.textContent = "Leaves out nothing more for your books.";
+    else if (!level.newlySkipped.length) detail.textContent = "Same words as the option above.";
     else {
       const examples = Object.assign(document.createElement("i"), { textContent: level.newlySkipped.join(", ") });
       detail.replaceChildren(i === 1 ? "Leaves out words like " : "Also leaves out words like ", examples, ".");
@@ -377,9 +382,20 @@ $("books-none").addEventListener("click", () => {
   refresh();
 });
 
+// The typeface the Anki card uses, bundled into the deck. Missing it isn't fatal: the card falls
+// back to the system font.
+async function cardFont() {
+  try {
+    const response = await fetch("assets/fonts/atkinson-hyperlegible-next-latin.woff2");
+    return response.ok ? new Uint8Array(await response.arrayBuffer()) : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 $("export-anki").addEventListener("click", async () => {
   const deck = $("deck").value.trim() || "Kindle cloze";
-  const apkg = await buildApkg(await sqlReady, selectedCards(), { deck, subdecks: $("subdecks").checked });
+  const apkg = await buildApkg(await sqlReady, selectedCards(), { deck, subdecks: $("subdecks").checked, font: await cardFont() });
   download("cloze-reader-anki.apkg", apkg, "application/octet-stream");
 });
 $("export-clozemaster").addEventListener("click", () => {

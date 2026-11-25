@@ -42,71 +42,72 @@ const BACK = `<div class="cr back k-{{Kind}} g-{{Gender}}">${TOP("{{cloze:Text}}
   {{#Source}}<div class="source">{{Source}}</div>{{/Source}}
 </div>`;
 
-// Okabe–Ito colours (distinguishable with the common colour-vision deficiencies), darkened in
-// light mode to keep text contrast at 4.5:1 or better. Masculine blue vs feminine vermillion is the
-// pair that stays most distinct; the chip text and article always repeat the gender, so colour is
-// never the only cue. Blanks and revealed words share one box style, so the reveal is a fill-in,
-// not a re-layout.
-const CSS = `.card {
-  --bg: #ffffff; --text: #1d1d1f; --muted: #5f6368; --panel: #f5f6f8; --line: #e3e5e8;
-  background: var(--bg); color: var(--text);
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+// The site's highlighter look: dark ink on a plain page, and highlighter swipes as the only colour
+// (masculine blue, feminine orange, verbs mint, adjectives lilac, everything else grey). Text on a
+// swipe is always dark ink, at 10:1 or better, in day and night mode alike. The chip and the
+// article always repeat the gender, so colour is never the only cue. Blanks and revealed words
+// share one swipe, so the reveal is a fill-in, not a re-layout. The typeface ships inside the
+// .apkg as a media file; the leading underscore stops Anki from deleting it as unused.
+export const FONT_FILE = "_atkinson-hyperlegible-next.woff2";
+
+const CSS = `@font-face { font-family: "Atkinson Hyperlegible Next"; font-weight: 200 800; src: url("${FONT_FILE}"); }
+.card {
+  --page: #ffffff; --text: #111111; --muted: #545454; --panel: #f2f2f0; --line: #e6e6e3; --ink: #111111;
+  background: var(--page); color: var(--text);
+  font-family: "Atkinson Hyperlegible Next", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   font-size: 18px; line-height: 1.6; text-align: left;
 }
 .card.nightMode, .night_mode .card {
-  --bg: #17181a; --text: #ececee; --muted: #a2a6ad; --panel: #222427; --line: #33363b;
+  --page: #141414; --text: #f2f2f0; --muted: #ababab; --panel: #1f1f1f; --line: #2b2b2b;
 }
 @media (min-width: 720px) { .card { font-size: 20px; } }
 
-.cr { --accent: #4b5563; --tint: rgba(75, 85, 99, 0.1);
-  max-width: 680px; margin: 0 auto; padding: 20px 16px 28px; overflow-wrap: break-word; }
-.cr.k-verb { --accent: #007a5a; --tint: rgba(0, 158, 115, 0.13); }
-.cr.k-adj  { --accent: #a3417a; --tint: rgba(204, 121, 167, 0.16); }
-.cr.g-m    { --accent: #0068a8; --tint: rgba(0, 114, 178, 0.11); }
-.cr.g-f    { --accent: #b34700; --tint: rgba(213, 94, 0, 0.11); }
-.nightMode .cr, .night_mode .cr { --accent: #b4bac3; --tint: rgba(180, 186, 195, 0.14); }
-.nightMode .cr.k-verb, .night_mode .cr.k-verb { --accent: #3fd0a4; --tint: rgba(0, 158, 115, 0.22); }
-.nightMode .cr.k-adj,  .night_mode .cr.k-adj  { --accent: #ef9fcc; --tint: rgba(204, 121, 167, 0.24); }
-.nightMode .cr.g-m,    .night_mode .cr.g-m    { --accent: #6cc0f2; --tint: rgba(86, 180, 233, 0.2); }
-.nightMode .cr.g-f,    .night_mode .cr.g-f    { --accent: #ff9d5c; --tint: rgba(230, 120, 40, 0.22); }
+.cr { --swipe: #dadad6;
+  max-width: 680px; margin: 0 auto; padding: 24px 16px 32px; overflow-wrap: break-word; }
+.cr.k-verb { --swipe: #a3e8c1; }
+.cr.k-adj  { --swipe: #dcc0ff; }
+.cr.g-m    { --swipe: #9dd6ff; }
+.cr.g-f    { --swipe: #ffb27d; }
 
-.chips { margin-bottom: 0.9em; }
-.chip { display: inline-block; padding: 0.15em 0.75em; border-radius: 999px; background: var(--tint);
-  color: var(--accent); font-size: 0.78em; font-weight: 650; letter-spacing: 0.02em; }
+.chips { margin-bottom: 1em; }
+.chip { display: inline-block; padding: 0.15em 0.75em; border-radius: 999px; background: var(--swipe);
+  color: var(--ink); font-size: 0.8em; font-weight: 700; }
 
-.sentences { font-size: 1.12em; }
+.sentences { font-size: 1.15em; line-height: 1.5; }
 .sentences p { margin: 0 0 0.9em; }
 .sentences p:last-child { margin-bottom: 0; }
 
-.cloze, .mask { color: var(--accent); background: var(--tint); border-bottom: 2px solid var(--accent);
-  border-radius: 4px; padding: 0 0.2em; }
+.cloze, .mask { background: var(--swipe); color: var(--ink); padding: 0.04em 0.2em;
+  border-radius: 0.18em 0.42em 0.3em 0.5em / 0.42em 0.3em 0.5em 0.3em;
+  -webkit-box-decoration-break: clone; box-decoration-break: clone; }
 .cloze { font-weight: 700; }
-.mask { font-weight: 650; }
+.mask { font-weight: 600; }
 .front .cloze > span, .front .mask > span { visibility: hidden; }
 
-.panel { margin-top: 1.3em; padding: 0.85em 1.1em; background: var(--panel);
-  border-left: 4px solid var(--accent); border-radius: 8px; font-size: 0.92em; }
-.panel .pos, .more .pos { color: var(--accent); font-size: 0.85em; font-weight: 650; }
-.panel ol, .more ol { margin: 0.15em 0 0; padding-left: 1.3em; }
-.panel li + li, .more li + li { margin-top: 0.35em; }
-.panel li::marker, .more li::marker { color: var(--accent); font-weight: 650; }
+.panel { margin-top: 1.4em; padding: 1em 1.2em; background: var(--panel); border-radius: 16px; font-size: 0.92em; }
+.panel .pos, .more .pos { font-size: 0.85em; font-weight: 700; }
+.panel ol, .more ol { margin: 0.15em 0 0; padding-left: 1.4em; }
+.panel li + li, .more li + li { margin-top: 0.4em; }
+.panel li::marker, .more li::marker { font-weight: 700; }
 .panel .entry + .entry, .more .entry + .entry { margin-top: 0.8em; }
 
-.synonyms { margin-top: 1em; font-size: 0.9em; }
-.synonyms .label, .more .label { color: var(--muted); font-size: 0.85em; font-weight: 650; margin-right: 0.5em; }
-.syn { display: inline-block; margin: 0.15em 0.3em 0.15em 0; padding: 0.05em 0.6em;
-  border: 1px solid var(--line); border-radius: 6px; }
+.synonyms { margin-top: 1.1em; font-size: 0.9em; }
+.synonyms .label, .more .label { color: var(--muted); font-size: 0.85em; font-weight: 600; margin-right: 0.5em; }
+.syn { display: inline-block; margin: 0.15em 0.3em 0.15em 0; padding: 0.05em 0.7em;
+  background: var(--panel); border-radius: 999px; }
 
-.hint { margin-top: 1.1em; min-height: 2em; font-size: 0.95em; color: var(--muted); }
-.hint a { color: var(--accent); font-weight: 650; text-decoration: none;
-  padding: 0.3em 0.8em; border: 1px solid var(--accent); border-radius: 999px; }
+.hint { margin-top: 1.2em; min-height: 2.2em; font-size: 0.95em; color: var(--muted); }
+.hint a { color: var(--text); font-weight: 700; text-decoration: none;
+  padding: 0.3em 0.9em; border: 2px solid var(--text); border-radius: 999px; }
 .hint.placeholder { visibility: hidden; }
 
-hr#answer { border: 0; border-top: 1px solid var(--line); margin: 1.2em 0 1em; }
-.headword { font-size: 1.5em; font-weight: 750; line-height: 1.25; color: var(--accent); }
-.headword .article { font-weight: 450; opacity: 0.75; white-space: pre; }
-.more { margin-top: 0.9em; font-size: 0.92em; }
-.source { margin-top: 1.1em; color: var(--muted); font-size: 0.8em; }`;
+hr#answer { border: 0; border-top: 1px solid var(--line); margin: 1.3em 0 1.1em; }
+.headword { font-size: 1.6em; font-weight: 700; line-height: 1.25; }
+.headword-text { padding: 0 0.08em; background: linear-gradient(var(--swipe), var(--swipe)) no-repeat 0 88% / 100% 0.62em; }
+.night_mode .headword-text, .nightMode .headword-text { color: var(--ink); background-size: 100% 100%; border-radius: 0.1em; }
+.headword .article { font-weight: 400; color: var(--muted); white-space: pre; }
+.more { margin-top: 1em; font-size: 0.92em; }
+.source { margin-top: 1.2em; color: var(--muted); font-size: 0.8em; }`;
 
 const KINDS = [
   [/^nom/i, "noun"],
@@ -189,7 +190,7 @@ export function noteFields(card) {
     Definition: sensesHtml(shown, (sense) => maskWordHtml(sense, words), labelled),
     Synonyms: synonyms.map((s) => `<span class="syn">${escapeHtml(s)}</span>`).join(" "),
     Indice: escapeHtml(hintFor(card.sentences[0].answer)),
-    Word: `${article ? `<span class="article">${article === "l’" ? article : `${article} `}</span>` : ""}${escapeHtml(lemma)}`,
+    Word: `${article ? `<span class="article">${article === "l’" ? article : `${article} `}</span>` : ""}<span class="headword-text">${escapeHtml(lemma)}</span>`,
     MoreSenses: sensesHtml(rest, escapeHtml, labelled),
     Source: escapeHtml(card.bookTitles.join(", ")),
     Kind: kind,
@@ -269,8 +270,9 @@ async function checksum(text) {
   return parseInt([...new Uint8Array(digest).slice(0, 4)].map((b) => b.toString(16).padStart(2, "0")).join(""), 16);
 }
 
-// `SQL` is the initialised sql.js module. Returns the .apkg bytes.
-export async function buildApkg(SQL, cards, { deck: deckName, subdecks = false, now = Date.now() }) {
+// `SQL` is the initialised sql.js module, `font` the typeface's bytes (optional: without it the
+// card falls back to the system font). Returns the .apkg bytes.
+export async function buildApkg(SQL, cards, { deck: deckName, subdecks = false, now = Date.now(), font }) {
   const seconds = Math.floor(now / 1000);
   const decks = { 1: deck(1, "Default", seconds) };
   const deckId = (name) => {
@@ -311,7 +313,8 @@ export async function buildApkg(SQL, cards, { deck: deckName, subdecks = false, 
     ]);
     return zip([
       { name: "collection.anki2", data: db.export() },
-      { name: "media", data: new TextEncoder().encode("{}") },
+      { name: "media", data: new TextEncoder().encode(JSON.stringify(font ? { 0: FONT_FILE } : {})) },
+      ...(font ? [{ name: "0", data: font }] : []),
     ]);
   } finally {
     db.close();

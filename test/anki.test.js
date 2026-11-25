@@ -24,7 +24,7 @@ test("front and back share fields; blanks keep the hidden word so the reveal fil
     '<div class="entry"><ol><li>Personne <span class="mask"><span>dératée</span></span>, à laquelle on a ôté la rate.</li></ol></div>',
   );
   assert.equal(fields.MoreSenses, "");
-  assert.equal(fields.Word, '<span class="article">le </span>dératé');
+  assert.equal(fields.Word, '<span class="article">le </span><span class="headword-text">dératé</span>');
   assert.equal(fields.Indice, "d…");
   assert.equal(fields.Source, "Vie &amp; mort");
   assert.equal(fields.Kind, "noun");
@@ -52,7 +52,7 @@ test("synonyms that share the answer's root are dropped; gender only colours nou
   assert.equal(fields.Synonyms, '<span class="syn">véloce</span> <span class="syn">prompt</span>');
   assert.equal(fields.Kind, "adj");
   assert.equal(fields.Gender, "");
-  assert.equal(fields.Word, "rapide");
+  assert.equal(fields.Word, '<span class="headword-text">rapide</span>');
 });
 
 test("multiple entries are labelled inside the definition", () => {
@@ -80,7 +80,7 @@ test("cards without a definition still work", () => {
   const fields = noteFields({ ...card, definition: undefined });
   assert.equal(fields.Definition, "");
   assert.equal(fields.Grammar, "");
-  assert.equal(fields.Word, "dératé");
+  assert.equal(fields.Word, '<span class="headword-text">dératé</span>');
   assert.equal(fields.Kind, "other");
 });
 
